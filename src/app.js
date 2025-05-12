@@ -11,24 +11,21 @@ app.get("/user?/:userid/blo+g/:blogid", (req, res) => {
     res.send({ userid: `${userid}`, blogid: `${blogid}`, name: `${name}` });
 });
 
-// handle auth middleware for get,post,... requests
-app.use("/admin", adminAuth);
-
-app.get("/user/login" ,(req, res) => {
-    res.send("you are now logged in");
-})
-
-app.get("/user", userAuth, (req, res) => {
-    res.send("user data sent");
-})
-
-app.get("/admin/data", (req, res, next) => {
-    res.send("all data sent");
+app.use("/getuserdata", (req, res) => {
+    try { //try catch is prefered
+        throw new Error("error")
+        res.send("user data sent")
+    } catch (err) {
+        res.status(500).send("something went wrong contact")
+    }
 });
 
-app.get("/admin/delete", (req, res, next) => {
-    res.send("all data delete");
-});
+// if try catch is not used then the error will be handled by the below route handler
+app.use("/", (err, req, res, next) => {
+    if (err) {
+        res.status(500).send("something went wrong")
+    }
+})
 
 app.listen(port, () => {
     console.log(`project starting on port ${port}....`);
