@@ -1,32 +1,33 @@
 const express = require("express");
+const connectDB = require("./config/database")
+const User = require("./models/user")
 const app = express();
 const port = 7777;
-const { adminAuth, userAuth } = require("./middlewares/auth.js")
 
-app.get("/user?/:userid/blo+g/:blogid", (req, res) => {
-    console.log(req.params);
-    const { userid, blogid } = req.params;
-    console.log(req.query);
-    const name = req.query.name;
-    res.send({ userid: `${userid}`, blogid: `${blogid}`, name: `${name}` });
-});
-
-app.use("/getuserdata", (req, res) => {
-    try { //try catch is prefered
-        throw new Error("error")
-        res.send("user data sent")
-    } catch (err) {
-        res.status(500).send("something went wrong contact")
+app.post("/signup", async (req, res) =>{
+    const userObj = {
+        FirstName : "ranbir",
+        LastName : "kumar",
+        emailId : "ranbir@abc.com",
+        password: "ranbir@123",
+        // _id: "10000f19ce8de465c6c12a66"
     }
-});
+    //creating a new instance of the User model
+    const user = new User(userObj);
 
-// if try catch is not used then the error will be handled by the below route handler
-app.use("/", (err, req, res, next) => {
-    if (err) {
-        res.status(500).send("something went wrong")
+    try {
+        await user.save();
+        res.send("User added succesfully");
+    } catch (err) {
+        res.status(400).send("Error saving the User: " + err)
     }
 })
 
-app.listen(port, () => {
-    console.log(`project starting on port ${port}....`);
-});
+connectDB().then(() => {
+    console.log("Database connection established");
+    app.listen(port, () => {
+        console.log(`project starting on port ${port}....`);
+    });
+}).catch((err) => {
+    console.log("Database cannot be connected : " + err);
+})
