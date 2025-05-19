@@ -1,28 +1,60 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-    FirstName : {
+    FirstName: {
         type: String,
-        required: true
+        required: true,
+        minlength: 3,
+        maxlength: 50,
+        trim: true
     },
-    LastName : {
-        type: String 
-    },
-    emailId : {
+    LastName: {
         type: String,
-        required: true
+        maxlength: 50,
+        trim: true
     },
-    password : {
-        type: String
+    emailId: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
     },
-    age : {
-        type: Number
+    password: {
+        type: String,
+        required: true,
+        minlength: 6
     },
-    Gender : {
-        type: String
+    age: {
+        type: Number,
+        min: 18,
+        max: 100
+    },
+    Gender: {
+        type: String,
+        // validate(value){
+        //     if(!["male", "female", "others"].includes(value)){
+        //         throw new Error("Gender data is not valid")
+        //     }
+        // },
+        enum: ["male", "female", "others"]
+    },
+    photoUrl: {
+        type: String,
+        default: "https://www.iconfinder.com/icons/2662226/account_blank_dummy_face_human_mannequin_profile_icon"
+    },
+    about: {
+        type: String,
+        default: "this a default about of the user",
+        maxlength: 500
+    },
+    skill: {
+        type: [String]
     }
+}, {
+    timestamps: true
 })
 
-const User = mongoose.model("User" , userSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;

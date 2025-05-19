@@ -76,7 +76,7 @@ app.patch("/userid", async (req, res) => {
     const data = req.body;
     try {
         // await User.findByIdAndUpdate(id, data);
-        const user = await User.findOneAndUpdate({_id : userId}, data, {returnDocument: "before"});
+        const user = await User.findOneAndUpdate({_id : userId}, data, {returnDocument: "before", runValidators: true});
         console.log(user);
         res.send("user updated succesfully")
     } catch (err) {
@@ -89,14 +89,13 @@ app.patch("/user", async (req, res) => {
     const email = req.body.email;
     const data = req.body;
     try {
-        const user = await User.findOneAndUpdate({ emailId: email }, data, { returnDocument: "before" });
+        const user = await User.findOneAndUpdate({ emailId: email }, data, { returnDocument: "before" , runValidators: true});
         console.log(user);
         res.send("user updated succesfully")
     } catch (err) {
         res.status(400).send("something went wrong error - " + err);
     }
 })
-
 
 connectDB().then(() => {
     console.log("Database connection established");
