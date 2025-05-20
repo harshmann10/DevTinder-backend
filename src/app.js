@@ -38,7 +38,7 @@ app.get("/userid", async (req, res) => {
     const id = req.body.id;
     try {
         const users = await User.findById(id);
-        if(users.length === 0) {
+        if (users.length === 0) {
             res.status(404).send("User not found");
         } else {
             res.send(users)
@@ -71,16 +71,28 @@ app.delete("/userid", async (req, res) => {
 })
 
 //update the user data by id
-app.patch("/userid", async (req, res) => {
-    const userId = req.body.userId;
+app.patch("/userid/:userId", async (req, res) => {
+    const userId = req.params?.userId;
     const data = req.body;
     try {
+        const allowed_updates = [
+            "photoUrl", "about", "gender", "age", "skills"
+        ];
+        const isupdateAllowed = Object.keys(data).every((k) => {
+            return allowed_updates.includes(k);
+        })
+        if (!isupdateAllowed) {
+            throw Error("update not allowed")
+        }
+        if (data?.skills.length > 10) {
+            throw Error("skills not allowed more than 10")
+        }
         // await User.findByIdAndUpdate(id, data);
-        const user = await User.findOneAndUpdate({_id : userId}, data, {returnDocument: "before", runValidators: true});
+        const user = await User.findOneAndUpdate({ _id: userId }, data, { returnDocument: "before", runValidators: true });
         console.log(user);
         res.send("user updated succesfully")
     } catch (err) {
-        res.status(400).send("something went wrong error - " + err);
+        res.status(400).send("something went wrong " + err);
     }
 })
 
@@ -89,7 +101,7 @@ app.patch("/user", async (req, res) => {
     const email = req.body.email;
     const data = req.body;
     try {
-        const user = await User.findOneAndUpdate({ emailId: email }, data, { returnDocument: "before" , runValidators: true});
+        const user = await User.findOneAndUpdate({ emailId: email }, data, { returnDocument: "before", runValidators: true });
         console.log(user);
         res.send("user updated succesfully")
     } catch (err) {
