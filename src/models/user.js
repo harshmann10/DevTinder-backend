@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
 
 const userSchema = new mongoose.Schema({
     FirstName: {
@@ -18,12 +19,22 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
         lowercase: true,
-        trim: true
+        trim: true,
+        validate(value) {
+            if (!validator.isEmail(value)) {
+                throw new Error("invalid email address")
+            }
+        }
     },
     password: {
         type: String,
         required: true,
-        minlength: 6
+        // minlength: 6,
+        validate(value) {
+            if (!validator.isStrongPassword(value)) {
+                throw new Error("password is weak " + value + " try a strong password")
+            }
+        }
     },
     age: {
         type: Number,
@@ -41,7 +52,12 @@ const userSchema = new mongoose.Schema({
     },
     photoUrl: {
         type: String,
-        default: "https://www.iconfinder.com/icons/2662226/account_blank_dummy_face_human_mannequin_profile_icon"
+        default: "https://www.iconfinder.com/icons/2662226/account_blank_dummy_face_human_mannequin_profile_icon",
+        validate(value) {
+            if (!validator.isURL(value)) {
+                throw new Error("Invalid URL: " + value)
+            }
+        }
     },
     about: {
         type: String,

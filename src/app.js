@@ -75,6 +75,7 @@ app.patch("/userid/:userId", async (req, res) => {
     const userId = req.params?.userId;
     const data = req.body;
     try {
+        //API level validation
         const allowed_updates = [
             "photoUrl", "about", "gender", "age", "skills"
         ];
@@ -84,7 +85,7 @@ app.patch("/userid/:userId", async (req, res) => {
         if (!isupdateAllowed) {
             throw Error("update not allowed")
         }
-        if (data?.skills.length > 10) {
+        if (data?.skills?.length > 10) {
             throw Error("skills not allowed more than 10")
         }
         // await User.findByIdAndUpdate(id, data);
