@@ -14,4 +14,14 @@ const validateSignUp = (req) => {
     }
 }
 
-module.exports = { validateSignUp };
+const validateLogin = (req) => {
+    const { emailId, password } = req.body;
+    if (!validator.isEmail(emailId)) {
+        throw new Error("EmailId is not valid");
+    }
+    // if (!validator.isStrongPassword(password)) {
+    //     throw new Error("password is weak");
+    // }
+}
+
+module.exports = { validateSignUp, validateLogin };

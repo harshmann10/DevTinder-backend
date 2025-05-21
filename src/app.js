@@ -1,9 +1,9 @@
 const express = require("express");
-const connectDB = require("./config/database")
-const User = require("./models/user")
-const { validateSignUp } = require("./utils/validation")
+const connectDB = require("./config/database");
+const User = require("./models/user");
+const { validateSignUp, validateLogin } = require("./utils/validation");
 const app = express();
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
 const port = 7777;
 
 app.use(express.json()); // express.json middleware
@@ -23,9 +23,31 @@ app.post("/signup", async (req, res) => {
             FirstName, LastName, emailId, password: passwordHash
         });
         await user.save();
-        res.send("User added succesfully");
+        res.send("User Signup succesfully");
     } catch (err) {
-        res.status(400).send("Error saving the User: " + err.message)
+        res.status(400).send("Error Signup with User: " + err.message)
+    }
+})
+
+app.post("/login", async (req, res) => {
+    try {
+        validateLogin(req)
+        const { emailId, password } = req.body;
+        const users = await User.findOne({ emailId: emailId });
+        if (!users) {
+            // throw new Error("EmailId in not present in DB") //we should never reveal internal detail to external entity as this a form of info leakage for user privacy and attacker
+            throw new Error("Invalid Credentials")
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, users.password)
+        if (isPasswordValid) {
+            res.send("User logged-in successfuly")
+        } else {
+            // throw new Error("password is not correct") //we should never reveal internal detail to external entity as this a form of info leakage for user privacy and attacker
+            throw new Error("Invalid Credentials")
+        }
+    } catch (err) {
+        res.status(401).send("Login failed: " + err.message)
     }
 })
 
