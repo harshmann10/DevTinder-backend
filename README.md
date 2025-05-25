@@ -21,3 +21,5 @@ Learning Before building
 - Password Encryption and Auth using bcryptjs
 
 - Authentication, JWT and Cookies
+
+- Building Core APIs and Express Router 

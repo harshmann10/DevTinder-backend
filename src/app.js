@@ -40,16 +40,15 @@ app.post("/login", async (req, res) => {
     try {
         validateLogin(req);
         const { emailId, password } = req.body;
-        const users = await User.findOne({ emailId: emailId });
-        if (!users) {
+        const user = await User.findOne({ emailId: emailId });
+        if (!user) {
             throw new Error("Invalid Credentials");
         }
 
-        const isPasswordValid = await bcrypt.compare(password, users.password);
+        const isPasswordValid = await user.validatePassword(password); // using Schema.methods function to validate password
         if (isPasswordValid) {
-            const token = jwt.sign({ _id: users._id }, "DevTinder@123", { expiresIn: "1h" }); //create a JWT token
-            // set the token in cookies and send the cookie to the browser
-            res.cookie("token", token, { maxAge: 7 * 24 * 60 * 60 * 1000 });
+            const token = await user.getJWT(); //create a JWT token with Schema.methods function 
+            res.cookie("token", token, { maxAge: 7 * 24 * 60 * 60 * 1000 }); // set the token in cookies
             // res.cookie("token", token, { expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) });
             res.send("User logged-in successfuly");
         } else {
@@ -60,7 +59,7 @@ app.post("/login", async (req, res) => {
     }
 });
 
-//get profile data
+//get profile data and check the jwt token with userAuth
 app.get("/profile", userAuth, async (req, res) => {
     try {
         const user = req.user;
