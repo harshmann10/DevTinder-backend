@@ -4,7 +4,7 @@ const User = require("../models/user");
 const userAuth = async (req, res, next) => {
     // read the token from req cookie
     // validate the token
-    //find the user in the database
+    // find the user in the database
     try {
         const cookie = req.cookies;
         const { token } = cookie;
