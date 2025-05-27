@@ -15,13 +15,27 @@ const validateSignUp = (req) => {
 }
 
 const validateLogin = (req) => {
-    const { emailId, password } = req.body;
+    const { emailId } = req.body;
     if (!validator.isEmail(emailId)) {
         throw new Error("EmailId is not valid");
     }
-    // if (!validator.isStrongPassword(password)) {
-    //     throw new Error("password is weak");
-    // }
 }
 
-module.exports = { validateSignUp, validateLogin };
+const validateEditprofile = (req) => {
+    const allowedEditFields = ["photoUrl", "about", "gender", "age", "skills"];
+
+    const isAllowed = Object.keys(req.body).every(field => allowedEditFields.includes(field));
+    return isAllowed;
+}
+
+const validateEditPassword = (req) => {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+        throw new Error("currentPassword and newPassword are required");
+    }
+    if (!validator.isStrongPassword(newPassword)) {
+        throw new Error("new Password is weak");
+    }
+}
+
+module.exports = { validateSignUp, validateLogin, validateEditprofile, validateEditPassword };
