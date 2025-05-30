@@ -23,7 +23,7 @@ profileRouter.patch("/edit", userAuth, async (req, res) => {
         Object.keys(req.body).forEach((key) => (loggedUser[key] = req.body[key]))
         await loggedUser.save();
         res.json({
-            message: `${loggedUser.FirstName}, your profile updated successfully`,
+            message: `${loggedUser.firstName}, your profile updated successfully`,
             data: loggedUser
         })
     } catch (err) {
@@ -52,7 +52,7 @@ profileRouter.patch("/password", userAuth, async (req, res) => {
         await loggedUser.save();
         res.clearCookie("token"); // clearing the jwt token and cookies
         res.json({
-            message: `${loggedUser.FirstName}, your password is changed successfully please login again`
+            message: `${loggedUser.firstName}, your password is changed successfully please login again`
         })
     } catch (err) {
         res.status(401).send("password change failed: " + err.message);

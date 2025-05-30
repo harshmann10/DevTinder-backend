@@ -23,3 +23,9 @@ Learning Before building
 - Authentication, JWT and Cookies
 
 - Building Core APIs and Express Router 
+
+- Logical Database and Compound Indexes
+
+- Code Optimization and Formatting
+
+- Clean code writing and Efficient routing

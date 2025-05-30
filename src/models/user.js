@@ -5,14 +5,15 @@ const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema(
     {
-        FirstName: {
+        firstName: {
             type: String,
             required: true,
             minlength: 3,
             maxlength: 50,
             trim: true,
+            index: true, // index is used on this field for faster queries
         },
-        LastName: {
+        lastName: {
             type: String,
             maxlength: 50,
             trim: true,
@@ -20,7 +21,7 @@ const userSchema = new mongoose.Schema(
         emailId: {
             type: String,
             required: true,
-            unique: true,
+            unique: true, // if unique is true, it will create a unique index on this field
             lowercase: true,
             trim: true,
             validate(value) {
@@ -45,7 +46,7 @@ const userSchema = new mongoose.Schema(
             min: 18,
             max: 100,
         },
-        Gender: {
+        gender: {
             type: String,
             enum: ["male", "female", "others"],
         },
@@ -77,15 +78,20 @@ const userSchema = new mongoose.Schema(
 userSchema.methods.getJWT = function () {
     const user = this;
 
-    const token = jwt.sign({ _id: user._id }, "DevTinder@123", { expiresIn: "1h" });
+    const token = jwt.sign({ _id: user._id }, "DevTinder@123", {
+        expiresIn: "1h",
+    });
     return token;
-}
+};
 
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
     const user = this;
 
-    const isPasswordValid = await bcrypt.compare(passwordInputByUser, user.password);
+    const isPasswordValid = await bcrypt.compare(
+        passwordInputByUser,
+        user.password
+    );
     return isPasswordValid;
-}
+};
 
 module.exports = mongoose.model("User", userSchema);

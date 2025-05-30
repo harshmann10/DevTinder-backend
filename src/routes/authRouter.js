@@ -9,14 +9,14 @@ authRouter.post("/signup", async (req, res) => {
         // validation of data
         validateSignUp(req);
 
-        const { FirstName, LastName, emailId, password } = req.body;
+        const { firstName, lastName, emailId, password } = req.body;
         // encrypt the password
         const passwordHash = await bcrypt.hash(password, 10);
 
         //creating a new instance of the User model
         const user = new User({
-            FirstName,
-            LastName,
+            firstName,
+            lastName,
             emailId,
             password: passwordHash,
         });
@@ -39,7 +39,10 @@ authRouter.post("/login", async (req, res) => {
         const isPasswordValid = await user.validatePassword(password); // using Schema.methods function to validate password
         if (isPasswordValid) {
             const token = await user.getJWT(); //create a JWT token with Schema.methods function
-            res.cookie("token", token, { maxAge: 7 * 24 * 60 * 60 * 1000 }); // set the token in cookies
+            res.cookie("token", token, {
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+                httpOnly: true,
+            });
             // res.cookie("token", token, { expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) });
             res.send("User logged-in successfuly");
         } else {
@@ -58,6 +61,6 @@ authRouter.post("/logout", (req, res) => {
     //     });
     res.clearCookie("token");
     res.send(`Logout successful`);
-})
+});
 
 module.exports = authRouter;
