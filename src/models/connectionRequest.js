@@ -26,6 +26,7 @@ const connectionRequestSchema = new mongoose.Schema(
 // Creating a compound index on fromUserId and toUserId to get faster queries
 connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 });
 
+// Pre-save middleware to validate that a user cannot send a connection request to themselves
 connectionRequestSchema.pre("save", function (next) {
     const connectionRequest = this;
 
