@@ -55,7 +55,6 @@ authRouter.post("/login", async (req, res) => {
                 maxAge: 7 * 24 * 60 * 60 * 1000,
                 httpOnly: true,
             });
-            // res.cookie("token", token, { expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) });
             res.send("User logged-in successfuly");
         } else {
             throw new Error("Invalid Credentials");
@@ -66,11 +65,6 @@ authRouter.post("/login", async (req, res) => {
 });
 
 authRouter.post("/logout", (req, res) => {
-    // res.cookie("token", null,
-    //     {
-    //         maxAge: 0,
-    //         expires: new Date(Date.now())
-    //     });
     res.clearCookie("token");
     res.send(`Logout successful`);
 });
