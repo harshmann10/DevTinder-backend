@@ -14,7 +14,7 @@ userRouter.get("/requests/received", userAuth, async (req, res) => {
             toUserId: loggedInUser._id,
             status: "interested",
         }).populate("fromUserId", USER_SAFE_DATA);
-        res.json({ "pending request ": connectionRequest });
+        res.json({ "data": connectionRequest });
     } catch (err) {
         res.status(400).json({ message: `${err}` });
     }
@@ -39,13 +39,13 @@ userRouter.get("/connections", userAuth, async (req, res) => {
             .populate("fromUserId", USER_SAFE_DATA)
             .populate("toUserId", USER_SAFE_DATA);
 
-        const connections = connectionRequest.map((request) => {
+        const data = connectionRequest.map((request) => {
             if (request.fromUserId.equals(loggedInUser._id)) {
                 return request.toUserId;
             }
             return request.fromUserId;
         });
-        res.json({ connections });
+        res.json({ data });
     } catch (err) {
         res.status(400).json({ message: `${err}` });
     }

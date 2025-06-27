@@ -27,7 +27,7 @@ profileRouter.patch("/edit", userAuth, async (req, res) => {
             data: loggedUser
         })
     } catch (err) {
-        res.status(401).send("profile data edit failed: " + err.message);
+        res.status(401).send("Error " + err.message);
     }
 });
 
@@ -41,9 +41,6 @@ profileRouter.patch("/password", userAuth, async (req, res) => {
         if (!isCurrentPasswordValid) {
             throw new Error("currentPassword is incorrect");
         }
-        // if (currentPassword === newPassword) {
-        //     throw new Error("currentPassword anb newPassword are same");
-        // }
         const isSameAsCurrentPassword = await bcrypt.compare(newPassword, loggedUser.password);
         if (isSameAsCurrentPassword) {
             throw new Error("New password cannot be the same as the current password");

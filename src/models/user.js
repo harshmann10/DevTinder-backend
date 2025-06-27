@@ -7,15 +7,15 @@ const userSchema = new mongoose.Schema(
     {
         firstName: {
             type: String,
-            required: true,
-            minlength: 3,
-            maxlength: 50,
+            required: [true, 'First name is required.'],
+            minlength: [3, 'First name must be at least {MINLENGTH} characters.'],
+            maxlength: [50, 'First name cannot exceed {MAXLENGTH} characters.'],
             trim: true,
             index: true, // index is used on this field for faster queries
         },
         lastName: {
             type: String,
-            maxlength: 50,
+            maxlength: [50, 'Last name cannot exceed {MAXLENGTH} characters.'],
             trim: true,
         },
         emailId: {
@@ -43,12 +43,15 @@ const userSchema = new mongoose.Schema(
         },
         age: {
             type: Number,
-            min: 18,
-            max: 100,
+            min: [18, "Age must be at least {MIN}."],
+            max: [100, "Age cannot exceed {MAX}."],
         },
         gender: {
             type: String,
-            enum: ["male", "female", "others"],
+            enum: {
+                values: ["male", "female", "others"],
+                message: "Please enter a valid gender",
+            },
         },
         photoUrl: {
             type: String,
@@ -63,7 +66,7 @@ const userSchema = new mongoose.Schema(
         about: {
             type: String,
             default: "this a default about of the user",
-            maxlength: 500,
+            maxlength: [500, 'About section cannot exceed {MAXLENGTH} characters.'],
         },
         skills: {
             type: [String],

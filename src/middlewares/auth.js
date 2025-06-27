@@ -9,7 +9,7 @@ const userAuth = async (req, res, next) => {
         const cookie = req.cookies;
         const { token } = cookie;
         if (!token) {
-            throw new Error("invalid token");
+            return res.status(401).send("Login again");
         }
         const decodedMsg = jwt.verify(token, "DevTinder@123");
         const { _id: id } = decodedMsg;
@@ -20,7 +20,7 @@ const userAuth = async (req, res, next) => {
         req.user = user;
         next();
     } catch (err) {
-        res.status(400).send("error: " + err.message);
+        res.status(401).send("error: " + err.message);
     }
 };
 
