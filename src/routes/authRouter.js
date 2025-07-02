@@ -32,9 +32,25 @@ authRouter.post("/signup", async (req, res) => {
             about,
             skills,
         });
-        await user.save();
-        res.send("User Signup succesfully");
+        const savedUser = await user.save();
+        const token = await savedUser.getJWT(); //create a JWT token with Schema.methods function
+        res.cookie("token", token, {
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+        });
+        res.json({ messages: "User Signup succesfully", data: savedUser });
     } catch (err) {
+        // Check for duplicate key error (unique constraint violation)
+        if (err.code === 11000) {
+            return res.status(400).send("An account with this email already exists.");
+        }
+
+        // Check if this is a Mongoose validation error
+        if (err.name === "ValidationError") {
+            // Extract the first error message for a cleaner response
+            const messages = Object.values(err.errors).map((val) => val.message);
+            return res.status(400).send(messages[0]);
+        }
         res.status(400).send("Error Signup with User: " + err.message);
     }
 });
@@ -60,7 +76,7 @@ authRouter.post("/login", async (req, res) => {
             throw new Error("Invalid Credentials");
         }
     } catch (err) {
-        res.status(401).send("Login failed: " + err.message);
+        res.status(401).send(err.message);
     }
 });
 

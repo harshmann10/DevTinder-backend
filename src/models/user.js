@@ -7,15 +7,15 @@ const userSchema = new mongoose.Schema(
     {
         firstName: {
             type: String,
-            required: [true, 'First name is required.'],
-            minlength: [3, 'First name must be at least {MINLENGTH} characters.'],
-            maxlength: [50, 'First name cannot exceed {MAXLENGTH} characters.'],
+            required: [true, "First name is required."],
+            minlength: [3, "First name must be at least {MINLENGTH} characters."],
+            maxlength: [50, "First name cannot exceed {MAXLENGTH} characters."],
             trim: true,
             index: true, // index is used on this field for faster queries
         },
         lastName: {
             type: String,
-            maxlength: [50, 'Last name cannot exceed {MAXLENGTH} characters.'],
+            maxlength: [50, "Last name cannot exceed {MAXLENGTH} characters."],
             trim: true,
         },
         emailId: {
@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema(
         photoUrl: {
             type: String,
             default:
-                "https://www.iconfinder.com/icons/2662226/account_blank_dummy_face_human_mannequin_profile_icon",
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCpY5LtQ47cqncKMYWucFP41NtJvXU06-tnQ&s",
             validate(value) {
                 if (!validator.isURL(value)) {
                     throw new Error("Invalid URL: " + value);
@@ -66,10 +66,19 @@ const userSchema = new mongoose.Schema(
         about: {
             type: String,
             default: "this a default about of the user",
-            maxlength: [500, 'About section cannot exceed {MAXLENGTH} characters.'],
+            maxlength: [200, "About section cannot exceed {MAXLENGTH} characters."],
         },
         skills: {
             type: [String],
+            validate: {
+                validator: function (arr) {
+                    // Remove empty strings and check for duplicates
+                    const filtered = arr.filter((s) => s && s.trim() !== "");
+                    const unique = new Set(filtered.map((s) => s.trim().toLowerCase()));
+                    return filtered.length === arr.length && unique.size === arr.length;
+                },
+                message: "Skills must not contain empty or duplicate values.",
+            },
         },
     },
     {
