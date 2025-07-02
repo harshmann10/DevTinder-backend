@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema(
             validate(value) {
                 if (!validator.isStrongPassword(value)) {
                     throw new Error(
-                        "password is weak " + value + " try a strong password"
+                        "password is not strong enough. Please include uppercase, lowercase, numbers, and symbols"
                     );
                 }
             },
@@ -90,7 +90,7 @@ const userSchema = new mongoose.Schema(
 userSchema.methods.getJWT = function () {
     const user = this;
 
-    const token = jwt.sign({ _id: user._id }, "DevTinder@123", {
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
         expiresIn: "1h",
     });
     return token;
