@@ -37,6 +37,8 @@ authRouter.post("/signup", async (req, res) => {
         res.cookie("token", token, {
             maxAge: 7 * 24 * 60 * 60 * 1000,
             httpOnly: true,
+            sameSite: "None",
+            secure: true,
         });
         res.json({ messages: "User Signup succesfully", data: savedUser });
     } catch (err) {
@@ -70,6 +72,8 @@ authRouter.post("/login", async (req, res) => {
             res.cookie("token", token, {
                 maxAge: 7 * 24 * 60 * 60 * 1000,
                 httpOnly: true,
+                sameSite: "None",
+                secure: true,
             });
             res.json(user);
         } else {
