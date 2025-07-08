@@ -31,7 +31,7 @@ profileRouter.patch("/edit", userAuth, async (req, res) => {
     }
 });
 
-profileRouter.patch("/password", userAuth, async (req, res) => {
+profileRouter.patch("/edit/password", userAuth, async (req, res) => {
     try {
         validateEditPassword(req);
         const { currentPassword, newPassword } = req.body;
@@ -52,7 +52,7 @@ profileRouter.patch("/password", userAuth, async (req, res) => {
             message: `${loggedUser.firstName}, your password is changed successfully please login again`
         })
     } catch (err) {
-        res.status(401).send("password change failed: " + err.message);
+        res.status(400).send("password change failed: " + err.message);
     }
 })
 
