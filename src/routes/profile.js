@@ -56,4 +56,17 @@ profileRouter.patch("/edit/password", userAuth, async (req, res) => {
     }
 })
 
+profileRouter.delete("/delete", userAuth, async (req, res) => {
+    try {
+        const loggedUser = req.user;
+        await loggedUser.deleteOne();
+        res.clearCookie("token");
+        res.json({
+            message: `${loggedUser.firstName}, your account has been successfully deleted.`
+        });
+    } catch (err) {
+        res.status(500).send("Account deletion failed: " + err.message); 
+    }
+})
+
 module.exports = profileRouter;
