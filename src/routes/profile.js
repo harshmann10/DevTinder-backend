@@ -7,7 +7,7 @@ const {
     validateResetPassword,
 } = require("../utils/validation");
 const bcrypt = require("bcrypt");
-const { sendResetPasswordEmail } = require("../utils/sendEmail");
+const { sendResetPasswordEmail, sendOtpEmail } = require("../utils/sendEmail");
 const User = require("../models/user");
 const validator = require("validator");
 const crypto = require("crypto");
@@ -76,7 +76,7 @@ profileRouter.patch("/edit/password", userAuth, async (req, res) => {
     }
 });
 
-profileRouter.post("/forgot-password", async (req, res) => {
+profileRouter.post("/forgot-password/email", async (req, res) => {
     try {
         const { emailId } = req.body;
         if (!emailId || !validator.isEmail(emailId)) {
@@ -95,17 +95,82 @@ profileRouter.post("/forgot-password", async (req, res) => {
 
             await sendResetPasswordEmail(user.emailId, resetToken);
         }
-        res
-            .status(200)
-            .json({
-                message:
-                    "If an account with that email exists, a password reset link has been sent.",
-            });
+        res.status(200).json({
+            message:
+                "If an account with that email exists, a password reset link has been sent.",
+        });
     } catch (err) {
         console.error("FORGOT_PASSWORD_ERROR:", err);
         res
             .status(500)
             .json({ message: "An internal error occurred. Please try again later." });
+    }
+});
+
+profileRouter.post("/forgot-password/otp", async (req, res) => {
+    try {
+        const { emailId } = req.body;
+        const user = await User.findOne({ emailId });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000); // Generate 6-digit OTP
+        user.resetOTP = crypto
+            .createHash("sha256")
+            .update(String(otp))
+            .digest("hex"); // Hash OTP
+        user.resetOTPExpires = Date.now() + 10 * 60 * 1000; // OTP expires in 10 minutes
+        await user.save();
+        await sendOtpEmail(user.emailId, otp);
+        res.status(200).json({ message: "OTP sent to email" });
+    } catch (err) {
+        console.error(err);
+        res
+            .status(500)
+            .json({ message: "Something went wrong. Please try again." });
+    }
+});
+
+profileRouter.post("/forgot-password/otp-verify", async (req, res) => {
+    try {
+        const { emailId, otp, newPassword } = req.body;
+        const user = await User.findOne({ emailId });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Check if OTP has expired
+        if (!user.resetOTPExpires || user.resetOTPExpires < Date.now()) {
+            return res
+                .status(400)
+                .json({ message: "OTP has expired. Request a new one." });
+        }
+
+        const hashedOTP = crypto
+            .createHash("sha256")
+            .update(String(otp))
+            .digest("hex");
+
+        if (hashedOTP !== user.resetOTP) {
+            return res
+                .status(400)
+                .json({ message: "Invalid OTP. Please try again." });
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.resetOTP = undefined;
+        user.resetOTPExpires = undefined;
+
+        await user.save();
+        res.status(200).json({ message: "Password reset successfully." });
+    } catch (err) {
+        console.error(err);
+        res
+            .status(500)
+            .json({ message: "Something went wrong. Please try again." });
     }
 });
 
@@ -129,11 +194,9 @@ profileRouter.post("/reset-password/:token", async (req, res) => {
 
         const isSameAsCurrentPassword = await user.validatePassword(newPassword);
         if (isSameAsCurrentPassword) {
-            return res
-                .status(400)
-                .json({
-                    message: "New password cannot be the same as the old password.",
-                });
+            return res.status(400).json({
+                message: "New password cannot be the same as the old password.",
+            });
         }
 
         user.password = await bcrypt.hash(newPassword, 10);
