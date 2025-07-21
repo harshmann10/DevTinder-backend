@@ -3,6 +3,7 @@ const authRouter = express.Router();
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const { validateSignUp, validateLogin } = require("../utils/validation");
+const { sendWelcomeEmail } = require("../utils/sendEmail");
 
 authRouter.post("/signup", async (req, res) => {
     try {
@@ -18,7 +19,6 @@ authRouter.post("/signup", async (req, res) => {
             about,
             skills,
         } = req.body;
-        // encrypt the password
         const passwordHash = await bcrypt.hash(password, 10);
 
         //creating a new instance of the User model
@@ -33,7 +33,8 @@ authRouter.post("/signup", async (req, res) => {
             skills,
         });
         const savedUser = await user.save();
-        const token = await savedUser.getJWT(); //create a JWT token with Schema.methods function
+        await sendWelcomeEmail(savedUser.emailId, savedUser.firstName);
+        const token = await savedUser.getJWT(); // Create a JWT token with Schema.methods function
         res.cookie("token", token, {
             maxAge: 7 * 24 * 60 * 60 * 1000,
             httpOnly: true,
@@ -88,8 +89,8 @@ authRouter.post("/logout", (req, res) => {
     res.clearCookie("token", {
         httpOnly: true,
         sameSite: "None",
-        secure: true
-      });
+        secure: true,
+    });
     res.send(`Logout successful`);
 });
 

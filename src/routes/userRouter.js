@@ -4,7 +4,8 @@ const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
 
-const USER_SAFE_DATA = "firstName lastName photoUrl age gender about skills";
+const USER_SAFE_DATA =
+    "firstName lastName photoUrl age gender about skills socialLinks";
 
 // get all the pending connection request for the loggedIn user
 userRouter.get("/requests/received", userAuth, async (req, res) => {
@@ -14,7 +15,7 @@ userRouter.get("/requests/received", userAuth, async (req, res) => {
             toUserId: loggedInUser._id,
             status: "interested",
         }).populate("fromUserId", USER_SAFE_DATA);
-        res.json({ "data": connectionRequest });
+        res.json({ data: connectionRequest });
     } catch (err) {
         res.status(400).json({ message: `${err}` });
     }

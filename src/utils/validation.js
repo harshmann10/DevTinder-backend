@@ -31,6 +31,7 @@ const validateEditprofile = (req) => {
         "gender",
         "age",
         "skills",
+        "socialLinks",
     ];
 
     const isAllowed = Object.keys(req.body).every((field) =>
@@ -49,9 +50,20 @@ const validateEditPassword = (req) => {
     }
 };
 
+const validateResetPassword = (req) => {
+    const { newPassword } = req.body;
+    if (!newPassword) {
+        throw new Error("New password is required.");
+    }
+    if (!validator.isStrongPassword(newPassword)) {
+        throw new Error("New password is too weak.");
+    }
+};
+
 module.exports = {
     validateSignUp,
     validateLogin,
     validateEditprofile,
     validateEditPassword,
+    validateResetPassword,
 };

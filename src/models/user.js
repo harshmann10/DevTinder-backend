@@ -80,6 +80,52 @@ const userSchema = new mongoose.Schema(
                 message: "Skills must not contain empty or duplicate values.",
             },
         },
+        socialLinks: {
+            github: {
+                type: String,
+                validate: {
+                    validator: function (v) {
+                        if (!v) return true;
+                        return validator.isURL(v, {
+                            protocols: ["http", "https"],
+                            require_protocol: true,
+                            host_whitelist: ["github.com", "www.github.com"],
+                        });
+                    },
+                    message: "Please provide a valid GitHub profile URL.",
+                },
+            },
+            linkedin: {
+                type: String,
+                validate: {
+                    validator: function (v) {
+                        if (!v) return true;
+                        return validator.isURL(v, {
+                            protocols: ["http", "https"],
+                            require_protocol: true,
+                            host_whitelist: ["linkedin.com", "www.linkedin.com"],
+                        });
+                    },
+                    message: "Please provide a valid LinkedIn profile URL.",
+                },
+            },
+            twitter: {
+                type: String,
+                validate: {
+                    validator: function (v) {
+                        if (!v) return true;
+                        return validator.isURL(v, {
+                            protocols: ["http", "https"],
+                            require_protocol: true,
+                            host_whitelist: ["twitter.com", "www.twitter.com", "x.com"],
+                        });
+                    },
+                    message: "Please provide a valid Twitter (X) profile URL.",
+                },
+            },
+        },
+        resetPasswordToken: String,
+        resetPasswordExpires: Date,
     },
     {
         timestamps: true,
