@@ -3,10 +3,11 @@ const connectDB = require("./config/database");
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const http = require("http");
 require("dotenv").config();
 
 const port = process.env.PORT;
-const allowedOrigin = (process.env.ALLOWED_ORIGIN)
+const allowedOrigin = process.env.ALLOWED_ORIGIN;
 
 app.use(
     cors({
@@ -22,16 +23,20 @@ const authRouter = require("./routes/authRouter");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter = require("./routes/userRouter");
+const initializeSocket = require("./utils/socket");
 
 app.use("/", authRouter);
 app.use("/profile", profileRouter);
 app.use("/request", requestRouter);
 app.use("/user", userRouter);
 
+const server = http.createServer(app);
+initializeSocket(server, allowedOrigin);
+
 connectDB()
     .then(() => {
         console.log("Database connection established");
-        app.listen(port, () => {
+        server.listen(port, () => {
             console.log(`project starting on port ${port}....`);
         });
     })
