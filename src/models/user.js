@@ -124,6 +124,18 @@ const userSchema = new mongoose.Schema(
                 },
             },
         },
+        isPremium: {
+            type: Boolean,
+            default: false,
+        },
+        membershipType: {
+            type: String,
+            enum: ["none", "basic", "pro", "ultra"],
+            default: "none",
+        },
+        membershipValidity: {
+            type: Date,
+        },
         resetPasswordToken: String,
         resetPasswordExpires: Date,
         resetOTP: String,
