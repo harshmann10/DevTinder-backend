@@ -14,11 +14,16 @@ const messageSchema = new mongoose.Schema(
     }
 );
 
-const chatSchema = new mongoose.Schema({
-    participants: [
-        { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    ],
-    message: [messageSchema],
-});
+const chatSchema = new mongoose.Schema(
+    {
+        participants: [
+            { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        ],
+        message: [messageSchema],
+    },
+    {
+        timestamps: true,
+    }
+);
 
 module.exports = mongoose.model("Chat", chatSchema);

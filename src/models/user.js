@@ -136,6 +136,9 @@ const userSchema = new mongoose.Schema(
         membershipValidity: {
             type: Date,
         },
+        lastSeen: {
+            type: Date,
+        },
         resetPasswordToken: String,
         resetPasswordExpires: Date,
         resetOTP: String,

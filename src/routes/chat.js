@@ -18,7 +18,7 @@ chatRouter.get("/:targetUserId", userAuth, async (req, res) => {
         if(!chat){
             chat = new Chat({
                 participants: [userId, targetUserId],
-                messages: [],
+                message: [],
             })
             await chat.save();
         }
