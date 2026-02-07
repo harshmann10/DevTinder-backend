@@ -13,9 +13,12 @@ This repository contains the **backend** of DevTinder, built with **Node.js, Exp
 ## 🛠️ Tech Stack
 
 - **Backend Framework**: [Node.js](https://nodejs.org/en) + [Express.js](https://expressjs.com/)
+- **Real-time Communication**: [Socket.io](https://socket.io/)
 - **Database**: [MongoDB](https://www.mongodb.com/) + [Mongoose](https://mongoosejs.com/)
 - **Authentication**: [JWT (JSON Web Tokens)](https://jwt.io/) + Cookies
 - **Encryption**: [bcryptjs](https://www.npmjs.com/package/bcryptjs) for password hashing
+- **Payment Gateway**: [Razorpay](https://razorpay.com/)
+- **Email Service**: Email notifications for password reset
 - **API Testing**: Postman
 - **Environment Variables Management**: dotenv
 - **Package Manager**: npm
@@ -29,7 +32,8 @@ This repository contains the **backend** of DevTinder, built with **Node.js, Exp
 ✅ User Signup, Login, and Logout  
 ✅ JWT-based authentication with secure cookies  
 ✅ Password encryption using **bcryptjs**  
-✅ Authentication middleware to protect routes
+✅ Authentication middleware to protect routes  
+✅ Password reset functionality with email verification
 
 ### **2. User Profile Management**
 
@@ -55,12 +59,38 @@ This repository contains the **backend** of DevTinder, built with **Node.js, Exp
   ✅ Implemented **pagination** using `skip` & `limit`  
   ✅ Optimized query using **MongoDB $nin and $ne operators**
 
-### **5. Database Design**
+### **5. Real-time Chat with Socket.io**
+
+✅ Send and receive messages in real-time  
+✅ Chat history persistence in MongoDB  
+✅ Message timestamps and user identification  
+✅ Event-driven communication for instant updates  
+✅ Connection validation before allowing chat
+
+### **6. Online Status & Last Seen Tracking**
+
+✅ Real-time user availability status  
+✅ Last seen timestamp tracking  
+✅ Socket.io events for connect/disconnect  
+✅ Broadcast online users to connected clients  
+✅ Efficient status updates without database calls
+
+### **7. Payment Integration with Razorpay**
+
+✅ Premium membership tier system  
+✅ Secure payment processing via Razorpay  
+✅ Payment verification and webhook handling  
+✅ Payment history tracking  
+✅ Order creation and confirmation
+
+### **8. Database Design**
 
 ✅ **User Schema**:
 
 - Sanitized input fields (`trim`, `lowercase`, validation)
 - Unique constraints on email and username
+- Premium membership status tracking
+- Last seen timestamp
 
 ✅ **ConnectionRequest Schema**:
 
@@ -68,23 +98,36 @@ This repository contains the **backend** of DevTinder, built with **Node.js, Exp
 - Indexed fields for optimized queries
 - Prevents multiple requests between the same users
 
-### **6. Advanced Query Optimization**
+✅ **Chat Schema**:
+
+- `senderId`, `receiverId`, `message` with timestamps
+- Indexed for efficient querying
+- Message history persistence
+
+✅ **Payment Schema**:
+
+- Order creation and payment tracking
+- Razorpay order and payment IDs
+- Payment status and verification
+
+### **9. Advanced Query Optimization**
 
 ✅ **Indexes & Compound Indexes**:
 
 - Used `index: true` for faster queries
 - Implemented compound indexes to optimize search
 
-### **7. Middleware Implementation**
+### **10. Middleware Implementation**
 
 ✅ **Authentication Middleware**: Protects private routes  
 ✅ **Error Handling Middleware**: Centralized error response  
-✅ **Mongoose `.pre` Middleware**: Prevents self-requests
+✅ **Mongoose `.pre` Middleware**: Prevents self-requests  
+✅ **Socket.io Authentication**: Validates users before allowing real-time communication
 
-### **8. Express Router Structure**
+### **11. Express Router Structure**
 
 ✅ Modular route organization for maintainability  
-✅ APIs structured into separate routers (`auth`, `profile`, `connections`, `users`)
+✅ APIs structured into separate routers (`auth`, `profile`, `connections`, `users`, `chat`, `payment`)
 
 ---
 
@@ -129,6 +172,25 @@ This repository contains the **backend** of DevTinder, built with **Node.js, Exp
 
 ---
 
+### **5️⃣ Chat Features (Socket.io & REST API)**
+
+| Method    | Endpoint              | Description                                            | Auth Required |
+| --------- | --------------------- | ------------------------------------------------------ | ------------- |
+| WebSocket | `socket.io`           | Real-time messaging for sending and receiving messages | ✅            |
+| GET       | `/chat/:targetUserId` | Fetch chat history with a specific user                | ✅            |
+
+---
+
+### **6️⃣ Payment Routes**
+
+| Method | Endpoint           | Description                            | Auth Required |
+| ------ | ------------------ | -------------------------------------- | ------------- |
+| POST   | `/payment/create`  | Create a Razorpay order for premium    | ✅            |
+| GET    | `/payment/verify`  | Check if the logged-in user is premium | ✅            |
+| POST   | `/payment/webhook` | Handle Razorpay payment webhooks       | ❌            |
+
+---
+
 ## 🏗️ Setup & Running the Server
 
 ### **1️⃣ Clone the Repository**
@@ -147,6 +209,11 @@ DATABASE_URL=mongodb+srv://<username>:<password>@cluster0.mongodb.net/devTinder
 ALLOWED_ORIGIN=http://localhost:5173
 JWT_SECRET=your_jwt_secret
 PORT=7777
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+RAZORPAY_WEBHOOK_SECRET=your_razorpay_webhook_secret
+GMAIL_USER=your_email@gmail.com
+GMAIL_PASS=your_app_password
 ```
 
 ### **3️⃣ Start the Backend Server**
@@ -337,12 +404,22 @@ Since the project is now fully functional, improvements are still welcome!
 
 ---
 
+## 📋 Recent Enhancements ✨
+
+✅ Real-time chat system using Socket.io  
+✅ Online status and last seen tracking  
+✅ Razorpay payment integration for premium features  
+✅ Email notifications for password reset  
+✅ Chat message history persistence
+
+---
+
 ## 📌 Future Enhancements
 
-🔹 Real-time notifications using WebSockets  
-🔹 Messaging System for better user interaction  
-🔹 Profile Search & Filtering  
-🔹 Unit Testing for API reliability
+🔹 Advanced profile search & filtering  
+🔹 Video call integration using WebRTC  
+🔹 Push notifications for new messages  
+🔹 User rating and review system
 
 ---
 

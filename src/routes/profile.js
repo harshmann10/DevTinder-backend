@@ -11,6 +11,9 @@ const { sendResetPasswordEmail, sendOtpEmail } = require("../utils/sendEmail");
 const User = require("../models/user");
 const validator = require("validator");
 const crypto = require("crypto");
+const fileUpload = require("../utils/fileUpload");
+const cloudinary = require("../utils/cloudinary");
+const { Readable } = require("stream");
 
 //get profile data and check the jwt token with userAuth
 profileRouter.get("/view", userAuth, async (req, res) => {
@@ -24,13 +27,45 @@ profileRouter.get("/view", userAuth, async (req, res) => {
     }
 });
 
-profileRouter.patch("/edit", userAuth, async (req, res) => {
+profileRouter.patch("/edit", userAuth, fileUpload.single("photo"), async (req, res) => {
     try {
         if (!validateEditprofile(req)) {
             throw new Error("user is not permitted to edit");
         }
         const loggedUser = req.user;
-        Object.keys(req.body).forEach((key) => (loggedUser[key] = req.body[key]));
+        if (req.file) {
+            const stream = Readable.from(req.file.buffer);
+            const result = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    { folder: "devtinder/profiles" },
+                    (error, result) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(result);
+                        }
+                    }
+                );
+                stream.pipe(uploadStream);
+            });
+            loggedUser.photoUrl = result.secure_url;
+        }
+
+        const allowedUpdates = [
+            "firstName",
+            "lastName",
+            "age",
+            "gender",
+            "about",
+            "skills",
+            "socialLinks",
+        ];
+        allowedUpdates.forEach((key) => {
+            if (req.body[key] !== undefined) {
+                loggedUser[key] = req.body[key];
+            }
+        });
+
         await loggedUser.save();
         res.json({
             message: `${loggedUser.firstName}, your profile updated successfully`,
