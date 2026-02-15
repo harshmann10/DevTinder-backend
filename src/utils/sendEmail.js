@@ -1,21 +1,27 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: process.env.BREVO_SMTP_HOST,
+    port: Number(process.env.BREVO_SMTP_PORT),
+    secure: false,
     auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
+        user: process.env.BREVO_SMTP_USER,
+        pass: process.env.BREVO_SMTP_PASS,
     },
 });
 
 const sendEmail = async (mailOptions) => {
     try {
         const options = {
-            ...mailOptions,
+            to: mailOptions.to,
+            subject: mailOptions.subject,
+            text: mailOptions.text,
+            html: mailOptions.html,
             from: `"DevTinder Team" <${process.env.GMAIL_USER}>`,
         };
 
         const info = await transporter.sendMail(options);
+        console.log("Email sent successfully to:", mailOptions.to, "Message ID:", info.messageId);
         return { success: true, messageId: info.messageId };
     } catch (error) {
         console.error("Error sending email:", error.message, error.stack);
