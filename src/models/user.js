@@ -55,13 +55,21 @@ const userSchema = new mongoose.Schema(
         },
         photoUrl: {
             type: String,
-            default:
-                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCpY5LtQ47cqncKMYWucFP41NtJvXU06-tnQ&s",
+            default: "",
             validate(value) {
+                if (!value) return true;
                 if (!validator.isURL(value)) {
                     throw new Error("Invalid URL: " + value);
                 }
             },
+        },
+        backgroundImage: {
+            type: String,
+            default: "",
+            maxlength: [
+                500,
+                "Background image URL cannot exceed {MAXLENGTH} characters.",
+            ],
         },
         about: {
             type: String,

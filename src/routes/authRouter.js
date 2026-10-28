@@ -33,7 +33,10 @@ authRouter.post("/signup", async (req, res) => {
             skills,
         });
         const savedUser = await user.save();
-        await sendWelcomeEmail(savedUser.emailId, savedUser.firstName);
+        // Email is best-effort: a mail outage must never fail the signup itself.
+        sendWelcomeEmail(savedUser.emailId, savedUser.firstName).catch((err) =>
+            console.error("WELCOME_EMAIL_ERROR:", err.message)
+        );
         const token = await savedUser.getJWT(); // Create a JWT token with Schema.methods function
         res.cookie("token", token, {
             maxAge: 7 * 24 * 60 * 60 * 1000,

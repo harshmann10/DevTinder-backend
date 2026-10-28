@@ -11,10 +11,11 @@ const getSecretRoomId = ({ userId, targetUserId }) => {
         .digest("hex");
 };
 
-const initializeSocket = (server, allowedOrigin) => {
+const initializeSocket = (server, allowedOrigins) => {
     const io = socket(server, {
         cors: {
-            origin: allowedOrigin,
+            // Array of allowed origins (production domain + previews).
+            origin: allowedOrigins,
         },
     });
 
@@ -62,6 +63,19 @@ const initializeSocket = (server, allowedOrigin) => {
             socket.join(roomId);
         });
 
+        // Relay typing state to the other participant in the room.
+        socket.on("typing", ({ userId, targetUserId }) => {
+            if (!userId || !targetUserId) return;
+            const roomId = getSecretRoomId({ userId, targetUserId });
+            socket.to(roomId).emit("userTyping", { userId });
+        });
+
+        socket.on("stopTyping", ({ userId, targetUserId }) => {
+            if (!userId || !targetUserId) return;
+            const roomId = getSecretRoomId({ userId, targetUserId });
+            socket.to(roomId).emit("userStoppedTyping", { userId });
+        });
+
         socket.on(
             "sendMessage",
             async ({ firstName, userId, targetUserId, text }) => {
@@ -107,6 +121,13 @@ const initializeSocket = (server, allowedOrigin) => {
                     });
                 } catch (err) {
                     console.log(err);
+                    // Tell the sender instead of failing silently.
+                    socket.emit("messageError", {
+                        message:
+                            err.message === "No connection found between users."
+                                ? err.message
+                                : "Your message could not be sent. Please try again.",
+                    });
                 }
             }
         );

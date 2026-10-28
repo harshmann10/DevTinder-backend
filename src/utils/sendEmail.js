@@ -1,32 +1,81 @@
-const nodemailer = require("nodemailer");
+// Brevo transactional email over HTTPS (port 443).
+// Render free web services block outbound SMTP (25/465/587), so the HTTP API
+// is used instead of an SMTP transport.
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+const REQUEST_TIMEOUT_MS = 10000;
+const SENDER_NAME = "DevTinder Team";
 
-const transporter = nodemailer.createTransport({
-    host: process.env.BREVO_SMTP_HOST,
-    port: Number(process.env.BREVO_SMTP_PORT),
-    secure: false,
-    auth: {
-        user: process.env.BREVO_SMTP_USER,
-        pass: process.env.BREVO_SMTP_PASS,
-    },
-});
+const getSenderEmail = () => process.env.MAIL_FROM || process.env.GMAIL_USER;
 
 const sendEmail = async (mailOptions) => {
-    try {
-        const options = {
-            to: mailOptions.to,
-            subject: mailOptions.subject,
-            text: mailOptions.text,
-            html: mailOptions.html,
-            from: `"DevTinder Team" <${process.env.GMAIL_USER}>`,
-        };
+    const apiKey = process.env.BREVO_API_KEY;
+    const senderEmail = getSenderEmail();
 
-        const info = await transporter.sendMail(options);
-        console.log("Email sent successfully to:", mailOptions.to, "Message ID:", info.messageId);
-        return { success: true, messageId: info.messageId };
-    } catch (error) {
-        console.error("Error sending email:", error.message, error.stack);
-        throw new Error(`Failed to send email. Reason: ${error.message}`);
+    // Fail with an actionable message instead of a silent no-op when the
+    // deployment is missing configuration.
+    if (!apiKey) {
+        throw new Error("Failed to send email. Reason: BREVO_API_KEY is not set");
     }
+    if (!senderEmail) {
+        throw new Error(
+            "Failed to send email. Reason: MAIL_FROM (or GMAIL_USER) is not set"
+        );
+    }
+
+    let response;
+    try {
+        response = await fetch(BREVO_API_URL, {
+            method: "POST",
+            headers: {
+                "api-key": apiKey,
+                "content-type": "application/json",
+                accept: "application/json",
+            },
+            body: JSON.stringify({
+                sender: { name: SENDER_NAME, email: senderEmail },
+                to: [{ email: mailOptions.to }],
+                subject: mailOptions.subject,
+                htmlContent: mailOptions.html,
+                ...(mailOptions.text ? { textContent: mailOptions.text } : {}),
+            }),
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
+    } catch (error) {
+        const reason =
+            error.name === "TimeoutError"
+                ? `request timed out after ${REQUEST_TIMEOUT_MS}ms`
+                : error.message;
+        console.error("Error sending email:", reason);
+        throw new Error(`Failed to send email. Reason: ${reason}`);
+    }
+
+    if (!response.ok) {
+        const raw = await response.text().catch(() => "");
+        let detail = raw.slice(0, 300);
+        try {
+            detail = JSON.parse(raw).message || detail;
+        } catch {
+            // Non-JSON error body (e.g. an HTML error page): keep the snippet.
+        }
+        console.error(
+            `Error sending email: Brevo responded ${response.status}`,
+            detail
+        );
+        throw new Error(
+            `Failed to send email. Reason: Brevo responded ${response.status}${
+                detail ? ` - ${detail}` : ""
+            }`
+        );
+    }
+
+    const data = await response.json().catch(() => ({}));
+    console.log(
+        "Email sent successfully to:",
+        mailOptions.to,
+        "Message ID:",
+        data.messageId
+    );
+    return { success: true, messageId: data.messageId };
 };
 
 const sendResetPasswordEmail = async (to, resetToken) => {
@@ -114,4 +163,13 @@ Tinder for Devs Team`;
     return sendEmail({ to, subject, text, html });
 };
 
-module.exports = { sendResetPasswordEmail, sendWelcomeEmail, sendOtpEmail };
+const pingBrevoHealth = () => {
+    if (!process.env.BREVO_API_KEY) return;
+    fetch("https://api.brevo.com/v3/account", {
+        headers: { "api-key": process.env.BREVO_API_KEY },
+    })
+        .then((res) => console.log(res.ok ? "Brevo connected (timer reset)" : `Brevo error: ${res.status}`))
+        .catch(() => {});
+};
+
+module.exports = { sendResetPasswordEmail, sendWelcomeEmail, sendOtpEmail, pingBrevoHealth };

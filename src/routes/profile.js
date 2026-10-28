@@ -15,6 +15,23 @@ const fileUpload = require("../utils/fileUpload");
 const cloudinary = require("../utils/cloudinary");
 const { Readable } = require("stream");
 
+const uploadToCloudinary = (buffer, folder) => {
+    return new Promise((resolve, reject) => {
+        const stream = Readable.from(buffer);
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { folder },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            }
+        );
+        stream.pipe(uploadStream);
+    });
+};
+
 //get profile data and check the jwt token with userAuth
 profileRouter.get("/view", userAuth, async (req, res) => {
     try {
@@ -27,28 +44,48 @@ profileRouter.get("/view", userAuth, async (req, res) => {
     }
 });
 
-profileRouter.patch("/edit", userAuth, fileUpload.single("photo"), async (req, res) => {
+profileRouter.patch(
+    "/edit",
+    userAuth,
+    fileUpload.fields([
+        { name: "photo", maxCount: 1 },
+        { name: "background", maxCount: 1 },
+    ]),
+    async (req, res) => {
     try {
         if (!validateEditprofile(req)) {
             throw new Error("user is not permitted to edit");
         }
+
+        // The frontend sends socialLinks as a JSON string because multipart
+        // form-data does not support nested objects.
+        if (typeof req.body.socialLinks === "string") {
+            try {
+                req.body.socialLinks = JSON.parse(req.body.socialLinks);
+            } catch (err) {
+                throw new Error("Invalid social links data");
+            }
+        }
+
         const loggedUser = req.user;
-        if (req.file) {
-            const stream = Readable.from(req.file.buffer);
-            const result = await new Promise((resolve, reject) => {
-                const uploadStream = cloudinary.uploader.upload_stream(
-                    { folder: "devtinder/profiles" },
-                    (error, result) => {
-                        if (error) {
-                            reject(error);
-                        } else {
-                            resolve(result);
-                        }
-                    }
-                );
-                stream.pipe(uploadStream);
-            });
+        const uploadedFiles = req.files || {};
+        const photoFile = uploadedFiles.photo?.[0];
+        const backgroundFile = uploadedFiles.background?.[0];
+
+        if (photoFile) {
+            const result = await uploadToCloudinary(
+                photoFile.buffer,
+                "devtinder/profiles"
+            );
             loggedUser.photoUrl = result.secure_url;
+        }
+
+        if (backgroundFile) {
+            const result = await uploadToCloudinary(
+                backgroundFile.buffer,
+                "devtinder/covers"
+            );
+            loggedUser.backgroundImage = result.secure_url;
         }
 
         const allowedUpdates = [
@@ -59,6 +96,7 @@ profileRouter.patch("/edit", userAuth, fileUpload.single("photo"), async (req, r
             "about",
             "skills",
             "socialLinks",
+            "backgroundImage",
         ];
         allowedUpdates.forEach((key) => {
             if (req.body[key] !== undefined) {
@@ -128,7 +166,11 @@ profileRouter.post("/forgot-password/email", async (req, res) => {
             user.resetPasswordExpires = Date.now() + 3600000; // Token expires in 1 hour
             await user.save();
 
-            await sendResetPasswordEmail(user.emailId, resetToken);
+            // Best-effort: the token is already saved, so a mail outage must
+            // not turn a successful request into a 500.
+            sendResetPasswordEmail(user.emailId, resetToken).catch((err) =>
+                console.error("RESET_EMAIL_ERROR:", err.message)
+            );
         }
         res.status(200).json({
             message:
@@ -158,7 +200,11 @@ profileRouter.post("/forgot-password/otp", async (req, res) => {
             .digest("hex"); // Hash OTP
         user.resetOTPExpires = Date.now() + 10 * 60 * 1000; // OTP expires in 10 minutes
         await user.save();
-        await sendOtpEmail(user.emailId, otp);
+        // Best-effort: the OTP is already saved, so a mail outage must not
+        // turn a successful request into a 500.
+        sendOtpEmail(user.emailId, otp).catch((err) =>
+            console.error("OTP_EMAIL_ERROR:", err.message)
+        );
         res.status(200).json({ message: "OTP sent to email" });
     } catch (err) {
         console.error(err);
@@ -272,6 +318,22 @@ profileRouter.delete("/delete", userAuth, async (req, res) => {
         res
             .status(500)
             .json({ message: "Account deletion failed: " + err.message });
+    }
+});
+
+// Public profile data used by the chat header when a page is opened
+// directly (for example after a refresh) instead of through the connections list.
+profileRouter.get("/:userId", userAuth, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId).select(
+            "firstName lastName photoUrl backgroundImage age gender about skills socialLinks lastSeen"
+        );
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json(user);
+    } catch (err) {
+        res.status(400).json({ message: "Unable to load profile: " + err.message });
     }
 });
 

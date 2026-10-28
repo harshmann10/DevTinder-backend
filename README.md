@@ -212,9 +212,11 @@ PORT=7777
 RAZORPAY_KEY_ID=your_razorpay_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 RAZORPAY_WEBHOOK_SECRET=your_razorpay_webhook_secret
-GMAIL_USER=your_email@gmail.com
-GMAIL_PASS=your_app_password
+BREVO_API_KEY=your_brevo_v3_api_key
+MAIL_FROM=your_verified_sender@example.com
 ```
+
+Email is sent through Brevo's HTTPS API (`POST /v3/smtp/email`), not SMTP, so it works on hosts that block outbound SMTP ports (e.g. Render free web services). `MAIL_FROM` must be a sender verified in your Brevo account.
 
 ### **3️⃣ Start the Backend Server**
 
